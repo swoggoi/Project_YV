@@ -90,6 +90,9 @@ func main() {
 		default:
 			fmt.Println("Неверный выбор!")
 			fmt.Scanln()
+
+ ///довольно 
+		
 		}
 	}
 }
