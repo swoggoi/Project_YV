@@ -145,7 +145,8 @@ func main() {
 
     userFromDB, err := getUser(db, NewUser.Username)
 
-    if err == sql.ErrNoRows {
+    switch err {
+case sql.ErrNoRows:
         fmt.Println("Пользователь не найден. Регистрация.")
         fmt.Println("Введите имя:")
         fmt.Scan(&NewUser.Name)
@@ -161,7 +162,7 @@ func main() {
 
         fmt.Println("Регистрация успешна! Ваш ID:", NewUser.ID)
 
-    } else if err == nil {
+    case nil:
         fmt.Println("Введите пароль:")
         var inputPassword string
         fmt.Scan(&inputPassword)
@@ -174,7 +175,7 @@ func main() {
         NewUser = *userFromDB
         fmt.Println("Вход выполнен!")
 
-    } else {
+    default:
         fmt.Println("Ошибка БД:", err)
         return
     }
