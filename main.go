@@ -5,8 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"database/sql"
-    "github.com/mattn/go-sqlite3"
 )
 
 type User struct {
@@ -39,6 +37,18 @@ func (u *User) ChangePassword() bool {
 	return true
 }
 
+func (u *User) SetNewName() bool {
+	var NewName string
+	fmt.Println("Введите новое имя:")
+	fmt.Scan(&NewName)
+	if u.Name == NewName {
+		fmt.Println("Имена совпадают")
+		return false
+	}
+	u.Name = NewName
+	return true
+}
+
 func (u *User) ChangeUsername() bool {
 	var NewUsername string
 	fmt.Println("Введите новый username:")
@@ -54,21 +64,25 @@ func (u *User) ChangeUsername() bool {
 
 func main() {
 	NewUser := User{
-		Username: "@sanya",
-		Name:     "Sasha",
-		Password: "Arina1978!",
+		Username: "",
+		Name:     "",
+		Password: "",
 	}
-
 	for {
 		clearConsole()
 		fmt.Println("---------------------------")
 		fmt.Printf("| %-25s|\n", "ПРИВЕТСТВУЕМ ВАС "+NewUser.Name)
 		fmt.Printf("| %-25s|\n", "ваш username: "+NewUser.Username)
+		fmt.Println("____________________________")
+		fmt.Printf("|%-25s |\n", "Здравствуйте! "+NewUser.Name)
+		fmt.Printf("|%-25s |\n", "Ваш username: @"+NewUser.Username)
 		fmt.Println("| 1 - показать пароль      |")
 		fmt.Println("| 2 - сменить пароль       |")
 		fmt.Println("| 3 - сменить username     |")
+		fmt.Println("| 4 - Сменить имя          |")
+		fmt.Println("| 5 - Зайди в чат по id    |")
 		fmt.Println("| 0 - выход                |")
-		fmt.Println("---------------------------")
+		fmt.Println("|__________________________|")
 
 		var choice int
 		fmt.Print("Выберите пункт: ")
@@ -86,6 +100,14 @@ func main() {
 			NewUser.ChangeUsername()
 			fmt.Println("Нажмите Enter для продолжения...")
 			fmt.Scanln()
+		case 4:
+			NewUser.SetNewName()
+			fmt.Println("Нажмите Enter для продолжения...")
+			fmt.Scanln()
+		//case 5:
+		//
+		//
+		//
 		case 0:
 			fmt.Println("Выход...")
 			return
@@ -93,8 +115,6 @@ func main() {
 			fmt.Println("Неверный выбор!")
 			fmt.Scanln()
 
-
-		
 		}
 	}
 }
