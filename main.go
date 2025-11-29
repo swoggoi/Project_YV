@@ -1,16 +1,49 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
+	"database/sql"
+    "github.com/mattn/go-sqlite3"
 )
 
 type User struct {
 	Username string
 	Name     string
 	Password string
+}
+
+func initDB() *sql.DB {
+	db, err := sql.Open("sqlite3", "/home/pop/бд/nashbd.letter")
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
+func saveUser(db *sql.DB, user User) error {
+	_, err := db.Exec(`
+        INSERT INTO users (username, name, password)
+        VALUES (?, ?, ?)`,
+		user.Username, user.Name, user.Password)
+	return err
+}
+
+func updatePassword(db *sql.DB, username, newPassword string) error {
+	_, err := db.Exec(`
+        UPDATE users SET password = ? WHERE username = ?`,
+		newPassword, username)
+	return err
+}
+
+func updateUsername(db *sql.DB, oldUsername, newUsername string) error {
+	_, err := db.Exec(`
+        UPDATE users SET username = ? WHERE username = ?`,
+		newUsername, oldUsername)
+	return err
 }
 
 func clearConsole() {
@@ -24,7 +57,7 @@ func clearConsole() {
 	cmd.Run()
 }
 
-func (u *User) ChangePassword() bool {
+func (u *User) ChangePassword(db *sql.DB) bool {
 	var NewPassword string
 	fmt.Println("Введите новый пароль:")
 	fmt.Scan(&NewPassword)
@@ -33,6 +66,9 @@ func (u *User) ChangePassword() bool {
 		return false
 	}
 	u.Password = NewPassword
+	if err := updatePassword(db, u.Username, NewPassword); err != nil {
+		fmt.Println("Ошибка записи в БД:", err)
+	}
 	fmt.Println("Вы успешно сменили пароль!")
 	return true
 }
@@ -49,7 +85,7 @@ func (u *User) SetNewName() bool {
 	return true
 }
 
-func (u *User) ChangeUsername() bool {
+func (u *User) ChangeUsername(db *sql.DB) bool {
 	var NewUsername string
 	fmt.Println("Введите новый username:")
 	fmt.Scan(&NewUsername)
@@ -57,16 +93,23 @@ func (u *User) ChangeUsername() bool {
 		fmt.Println("user'ы одинаковые")
 		return false
 	}
+	old := u.Username
 	u.Username = NewUsername
+	if err := updateUsername(db, old, NewUsername); err != nil {
+		fmt.Println("Ошибка записи в БД:", err)
+	}
 	fmt.Println("Вы успешно сменили username!")
 	return true
 }
 
 func main() {
+	db := initDB()
+	defer db.Close()
+
 	NewUser := User{
-		Username: "",
-		Name:     "",
-		Password: "",
+		Username: "@sanya",
+		Name:     "Sasha",
+		Password: "Arina1978!",
 	}
 	for {
 		clearConsole()
@@ -93,11 +136,11 @@ func main() {
 			fmt.Println("Нажмите Enter для продолжения...")
 			fmt.Scanln()
 		case 2:
-			NewUser.ChangePassword()
+			NewUser.ChangePassword(db)
 			fmt.Println("Нажмите Enter для продолжения...")
 			fmt.Scanln()
 		case 3:
-			NewUser.ChangeUsername()
+			NewUser.ChangeUsername(db)
 			fmt.Println("Нажмите Enter для продолжения...")
 			fmt.Scanln()
 		case 4:
@@ -115,6 +158,8 @@ func main() {
 			fmt.Println("Неверный выбор!")
 			fmt.Scanln()
 
+
+		
 		}
 	}
 }
