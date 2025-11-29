@@ -57,20 +57,39 @@ func main() {
 		Password: "Arina1978!",
 	}
 
-	fmt.Println("---------------------------")
-	fmt.Println("| ПРИВЕТСТВУЕМ ВАС", NewUser.Name, "  |")
-	fmt.Println("| ваш username:", NewUser.Username, " |")
-	fmt.Println("| пароль:", NewUser.Password, "       |")
-	fmt.Println("---------------------------")
-	NewUser.ChangePassword()
-	clearConsole()
-	NewUser.ChangeUsername()
-	clearConsole()
-	fmt.Println("---------------------------")
-	fmt.Printf("| %-20s |\n", "ПРИВЕТСТВУЕМ ВАС "+NewUser.Name)
-	fmt.Printf("| %-20s |\n", "ваш username: @"+NewUser.Username)
-	fmt.Printf("| %-20s |\n", "пароль: "+NewUser.Password)
+	for {
+		clearConsole()
+		fmt.Println("---------------------------")
+		fmt.Printf("| %-25s |\n", "ПРИВЕТСТВУЕМ ВАС "+NewUser.Name)
+		fmt.Printf("| %-25s |\n", "ваш username: "+NewUser.Username)
+		fmt.Println("| 1 - показать пароль      |")
+		fmt.Println("| 2 - сменить пароль       |")
+		fmt.Println("| 3 - сменить username     |")
+		fmt.Println("| 0 - выход                |")
+		fmt.Println("---------------------------")
 
-	fmt.Println("---------------------------")
-
+		var choice int
+		fmt.Print("Выберите пункт: ")
+		fmt.Scan(&choice)
+		switch choice {
+		case 1:
+			fmt.Println("Ваш пароль:", NewUser.Password)
+			fmt.Println("Нажмите Enter для продолжения...")
+			fmt.Scanln()
+		case 2:
+			NewUser.ChangePassword()
+			fmt.Println("Нажмите Enter для продолжения...")
+			fmt.Scanln()
+		case 3:
+			NewUser.ChangeUsername()
+			fmt.Println("Нажмите Enter для продолжения...")
+			fmt.Scanln()
+		case 0:
+			fmt.Println("Выход...")
+			return
+		default:
+			fmt.Println("Неверный выбор!")
+			fmt.Scanln()
+		}
+	}
 }
