@@ -91,7 +91,7 @@ func main() {
 			fmt.Println("Неверный выбор!")
 			fmt.Scanln()
 
- ///довольно 
+
 		
 		}
 	}
