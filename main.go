@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"database/sql"
+    "github.com/mattn/go-sqlite3"
 )
 
 type User struct {
@@ -60,8 +62,8 @@ func main() {
 	for {
 		clearConsole()
 		fmt.Println("---------------------------")
-		fmt.Printf("| %-25s |\n", "ПРИВЕТСТВУЕМ ВАС "+NewUser.Name)
-		fmt.Printf("| %-25s |\n", "ваш username: "+NewUser.Username)
+		fmt.Printf("| %-25s|\n", "ПРИВЕТСТВУЕМ ВАС "+NewUser.Name)
+		fmt.Printf("| %-25s|\n", "ваш username: "+NewUser.Username)
 		fmt.Println("| 1 - показать пароль      |")
 		fmt.Println("| 2 - сменить пароль       |")
 		fmt.Println("| 3 - сменить username     |")
