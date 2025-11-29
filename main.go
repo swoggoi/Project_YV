@@ -1,13 +1,16 @@
 package main
 
 import (
+    "bufio"
     "database/sql"
     "fmt"
     "math/rand"
     "os"
     "os/exec"
     "runtime"
+    "strings"
     "time"
+
     _ "github.com/lib/pq"
 )
 
@@ -16,6 +19,12 @@ type User struct {
     Username string
     Name     string
     Password string
+}
+
+type Message struct {
+    FromID    int
+    Text      string
+    CreatedAt time.Time
 }
 
 func IdGenerator() int {
@@ -134,6 +143,36 @@ func getUser(db *sql.DB, username string) (*User, error) {
     return &u, nil
 }
 
+func sendMessage(db *sql.DB, fromID, toID int, text string) error {
+    _, err := db.Exec(`
+        INSERT INTO messages (from_id, to_id, text)
+        VALUES ($1, $2, $3)`,
+        fromID, toID, text)
+    return err
+}
+
+func getMessages(db *sql.DB, userID, otherID int) ([]Message, error) {
+    rows, err := db.Query(`
+        SELECT from_id, text, created_at FROM messages
+        WHERE (from_id = $1 AND to_id = $2)
+           OR (from_id = $2 AND to_id = $1)
+        ORDER BY created_at`,
+        userID, otherID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var msgs []Message
+    for rows.Next() {
+        var m Message
+        rows.Scan(&m.FromID, &m.Text, &m.CreatedAt)
+        msgs = append(msgs, m)
+    }
+
+    return msgs, nil
+}
+
 func main() {
     db := initDB()
     defer db.Close()
@@ -146,7 +185,7 @@ func main() {
     userFromDB, err := getUser(db, NewUser.Username)
 
     switch err {
-case sql.ErrNoRows:
+    case sql.ErrNoRows:
         fmt.Println("Пользователь не найден. Регистрация.")
         fmt.Println("Введите имя:")
         fmt.Scan(&NewUser.Name)
@@ -179,6 +218,8 @@ case sql.ErrNoRows:
         fmt.Println("Ошибка БД:", err)
         return
     }
+
+    reader := bufio.NewReader(os.Stdin)
 
     for {
         clearConsole()
@@ -216,9 +257,42 @@ case sql.ErrNoRows:
             fmt.Scanln()
 
         case 4:
-            fmt.Println("Функция чата пока не реализована")
-            fmt.Scanln()
-            fmt.Scanln()
+            fmt.Println("Введите ID собеседника:")
+            var otherID int
+            fmt.Scan(&otherID)
+
+            for {
+                clearConsole()
+
+                msgs, _ := getMessages(db, NewUser.ID, otherID)
+
+                fmt.Println("Чат:")
+                fmt.Println("──────────────────────────────")
+
+                for _, m := range msgs {
+                    timeStr := m.CreatedAt.Format("15:04:05")
+
+                    if m.FromID == NewUser.ID {
+                        fmt.Printf("[Вы | %s]: %s\n", timeStr, m.Text)
+                    } else {
+                        fmt.Printf("[Собеседник | %s]: %s\n", timeStr, m.Text)
+                    }
+                }
+
+                fmt.Println("──────────────────────────────")
+                fmt.Println("Введите сообщение (или /exit):")
+
+                text, _ := reader.ReadString('\n')
+                text = strings.TrimSpace(text)
+
+                if text == "/exit" {
+                    break
+                }
+
+                if text != "" {
+                    sendMessage(db, NewUser.ID, otherID, text)
+                }
+            }
 
         case 0:
             fmt.Println("Выход...")
