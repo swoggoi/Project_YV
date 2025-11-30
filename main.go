@@ -40,6 +40,7 @@ func initDB() *sql.DB {
     }
     return db
 }
+
 func saveUser(db *sql.DB, user *User) error {
     _, err := db.Exec(`
         INSERT INTO users (id, username, name, password)
