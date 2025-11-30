@@ -33,14 +33,13 @@ func IdGenerator() int {
 }
 
 func initDB() *sql.DB {
-    connStr := "host=localhost port=5432 user=postgres password=1234 dbname=postgres sslmode=disable"
+    connStr := "host=100.113.95.4 port=5432 user=postgres password=123123 dbname=postgres sslmode=disable"
     db, err := sql.Open("postgres", connStr)
     if err != nil {
         panic(err)
     }
     return db
 }
-
 func saveUser(db *sql.DB, user *User) error {
     _, err := db.Exec(`
         INSERT INTO users (id, username, name, password)
