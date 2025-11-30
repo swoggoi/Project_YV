@@ -33,7 +33,7 @@ func IdGenerator() int {
 }
 
 func initDB() *sql.DB {
-    connStr := "host=100.113.95.4 port=5432 user=postgres password=123123 dbname=postgres sslmode=disable"
+    connStr := "host=localhost port=5432 user=postgres password=123123 dbname=postgres sslmode=disable"
     db, err := sql.Open("postgres", connStr)
     if err != nil {
         panic(err)
