@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"fmt"
-	"os"
-	"time"
 
 	"github.com/fatih/color"
 )
@@ -55,15 +52,40 @@ func main() {
 	}
 
 	// дальше — твое меню (без изменений)
-	reader := bufio.NewReader(os.Stdin)
 	for {
 		clearConsole()
-		// ...
-		// чат/смена пароля/смена username
-		// ...
-		_ = reader // чтобы пример был самодостаточный
-		time.Sleep(10 * time.Millisecond)
-		return
+
+		fmt.Printf("│ %-26s   │\n", HelloUser()+" "+NewUser.Name)
+		fmt.Printf("│ Username: @%-16s  │\n", NewUser.Username)
+		fmt.Printf("│ ID: %-22d   │\n", NewUser.ID)
+		fmt.Println("├──────────────────────────────┤")
+		fmt.Println("│ 1 — Показать пароль          │")
+		fmt.Println("│ 2 — Сменить пароль           │")
+		fmt.Println("│ 3 — Сменить username         │")
+		fmt.Println("│ 4 — Чат                      │")
+		fmt.Println("│ 0 — Выход                    │")
+		fmt.Println("└──────────────────────────────┘")
+
+		var choice int
+		fmt.Print("Выберите пункт: ")
+		fmt.Scan(&choice)
+
+		switch choice {
+		case 1:
+			fmt.Println("Ваш пароль:", NewUser.Password)
+		case 2:
+			NewUser.ChangePassword(db)
+		case 3:
+			NewUser.ChangeUsername(db)
+		case 4:
+			// чат
+		case 0:
+			fmt.Println("Выход...")
+			return
+		default:
+			fmt.Println("Неверный выбор")
+		}
 	}
+
 	///
 }
