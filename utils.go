@@ -27,8 +27,20 @@ func CheckPassword(hash string, password string) bool {
 }
 
 func IdGenerator() int {
-	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(90000000) + 10000000
+}
+
+func GenerateUniqueID(db *sql.DB) int {
+	for {
+		id := IdGenerator()
+
+		var exists int
+		db.QueryRow("SELECT COUNT(*) FROM users WHERE id = $1", id).Scan(&exists)
+
+		if exists == 0 {
+			return id
+		}
+	}
 }
 
 func clearConsole() {
@@ -39,7 +51,7 @@ func clearConsole() {
 		cmd = exec.Command("clear")
 	}
 	cmd.Stdout = os.Stdout
-	cmd.Run()
+	_ = cmd.Run()
 }
 
 func HelloUser() string {
@@ -55,6 +67,7 @@ func HelloUser() string {
 		return "Доброй ночи!"
 	}
 }
+
 func register(db *sql.DB) *User {
 	fmt.Print("Введите новый username: ")
 	username := readLine()
@@ -62,7 +75,6 @@ func register(db *sql.DB) *User {
 	fmt.Print("Введите пароль: ")
 	password := readLine()
 
-	// Проверка: существует ли уже такой пользователь
 	existing, err := findUserByUsername(db, username)
 	if err != nil {
 		fmt.Println("Ошибка при проверке:", err)
@@ -73,20 +85,22 @@ func register(db *sql.DB) *User {
 		return nil
 	}
 
-	// Хэшируем пароль
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		fmt.Println("Ошибка хэширования:", err)
 		return nil
 	}
 
-	// Создаём пользователя
 	var user User
+	user.ID = GenerateUniqueID(db)
+
 	err = db.QueryRow(`
-        INSERT INTO users (username, password, name)
-        VALUES ($1, $2, $3)
+        INSERT INTO users (id, username, password, name)
+        VALUES ($1, $2, $3, $4)
         RETURNING id, username, password, name
-    `, username, string(hashed), username).Scan(&user.ID, &user.Username, &user.Password, &user.Name)
+    `, user.ID, username, string(hashed), username).Scan(
+		&user.ID, &user.Username, &user.Password, &user.Name,
+	)
 
 	if err != nil {
 		fmt.Println("Ошибка регистрации:", err)
@@ -100,7 +114,7 @@ func register(db *sql.DB) *User {
 func MainMenu() {
 	fmt.Println("╔════════════════════════════════════════════════════════════╗")
 	fmt.Println("║                                                            ║")
-	fmt.Println("║", HelloUser(), "                                             ║")
+	fmt.Println("║", HelloUser(), "                                              ║")
 	fmt.Println("║                                                            ║")
 	fmt.Println("║  1 — 🔐 Войти                                              ║")
 	fmt.Println("║  2 — 📝 Зарегистрироваться                                 ║")
@@ -119,17 +133,9 @@ func UserMenu() {
 	fmt.Println("│ 0 — Выход                    │")
 	fmt.Println("└──────────────────────────────┘")
 }
-func isValidIDString(id string) bool {
-	if len(id) != 8 {
-		return false
-	}
-	for _, ch := range id {
-		if ch < '0' || ch > '9' {
-			return false
-		}
-	}
-	return true
-}
+
+// -------------------- USER LOOKUP --------------------
+
 func findUserByID(db *sql.DB, id int) (*User, error) {
 	var u User
 	err := db.QueryRow(`SELECT id, username, password, name FROM users WHERE id = $1`, id).
@@ -143,55 +149,12 @@ func findUserByID(db *sql.DB, id int) (*User, error) {
 	return &u, nil
 }
 
-func startChat(db *sql.DB, currentUser *User) {
-	fmt.Print("Введите ID собеседника: ")
-	var targetID int
-	fmt.Scan(&targetID)
-
-	if targetID == currentUser.ID {
-		fmt.Println("Нельзя писать самому себе.")
-		return
-	}
-
-	partner, err := findUserByID(db, targetID)
-	if err != nil {
-		fmt.Println("Ошибка при поиске пользователя:", err)
-		return
-	}
-	if partner == nil {
-		fmt.Println("Пользователь с таким ID не найден.")
-		return
-	}
-
-	fmt.Printf("Чат с %s (@%s)\n", partner.Name, partner.Username)
-	fmt.Println("Введите сообщение (или 'exit' для выхода):")
-
-	for {
-		fmt.Print("Вы: ")
-		text := readLine()
-		if text == "exit" {
-			break
-		}
-
-		// Сохраняем сообщение
-		_, err := db.Exec(`
-            INSERT INTO messages (user_id, receiver_id, content)
-            VALUES ($1, $2, $3)
-        `, currentUser.ID, partner.ID, text)
-		if err != nil {
-			fmt.Println("Ошибка отправки:", err)
-			continue
-		}
-
-		fmt.Println("Сообщение отправлено.")
-	}
-}
 func showChatHistory(db *sql.DB, userID, partnerID int) {
 	rows, err := db.Query(`
-        SELECT user_id, content, created_at
+        SELECT from_id, text, created_at
         FROM messages
-        WHERE (user_id = $1 AND receiver_id = $2)
-           OR (user_id = $2 AND receiver_id = $1)
+        WHERE (from_id = $1 AND to_id = $2)
+           OR (from_id = $2 AND to_id = $1)
         ORDER BY created_at
     `, userID, partnerID)
 	if err != nil {
@@ -201,15 +164,50 @@ func showChatHistory(db *sql.DB, userID, partnerID int) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var senderID int
-		var content string
-		var createdAt string
-		rows.Scan(&senderID, &content, &createdAt)
+		var fromID int
+		var text string
+		var createdAt time.Time
+		rows.Scan(&fromID, &text, &createdAt)
 
-		prefix := "Собеседник"
-		if senderID == userID {
-			prefix = "Вы"
+		sender := "Собеседник"
+		if fromID == userID {
+			sender = "Вы"
 		}
-		fmt.Printf("[%s] %s: %s\n", createdAt, prefix, content)
+
+		fmt.Printf("[%s] %s: %s\n",
+			createdAt.Format("15:04"),
+			sender,
+			text,
+		)
+	}
+}
+
+func startChat(db *sql.DB, currentUser *User, partnerID int) {
+	for {
+		clearConsole()
+
+		partner, _ := findUserByID(db, partnerID)
+		fmt.Printf("Чат с %s (@%s)\n\n", partner.Name, partner.Username)
+
+		showChatHistory(db, currentUser.ID, partnerID)
+
+		fmt.Println("\nВведите сообщение (или 'exit' для выхода):")
+		fmt.Print("Вы: ")
+
+		text := readLine()
+		if text == "exit" {
+			break
+		}
+
+		_, err := db.Exec(`
+            INSERT INTO messages (from_id, to_id, text)
+            VALUES ($1, $2, $3)
+        `, currentUser.ID, partnerID, text)
+
+		if err != nil {
+			fmt.Println("Ошибка отправки:", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
 	}
 }
