@@ -3,8 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-
-	"github.com/fatih/color"
 )
 
 func getUser(db *sql.DB, username string) (*User, error) {
@@ -25,60 +23,57 @@ func main() {
 	defer db.Close()
 
 	var NewUser User
-	color.Red("═══════════════════════════════════════════════")
-	fmt.Println("|                                             |")
-	fmt.Println("|            ", HelloUser(), "                  |")
-	fmt.Println("|                                             |")
-	fmt.Println("|1 - войти                                    |")
-	fmt.Println("|2 - зарегестрироваться                       |")
-	fmt.Println("|                                             |")
-	fmt.Println("|                                             |")
-	color.Red("═══════════════════════════════════════════════")
+	MainMenu()
 
 	var choose int
-	fmt.Println("Введите пункт:")
 	fmt.Scan(&choose)
 
 	switch choose {
 	case 1:
-		handleLoginOrRegister(db, &NewUser)
+		user := login(db)
+		if user != nil {
+			NewUser = *user
+		}
 	case 2:
-		handleLoginOrRegister(db, &NewUser)
+		user := register(db)
+		if user != nil {
+			NewUser = *user
+		}
 	case 0:
 		fmt.Println("Выход...")
 		return
 	default:
 		fmt.Println("Неверный выбор")
+		return
 	}
 
+	if NewUser.ID == 0 {
+		fmt.Println("Ошибка входа или регистрации. Попробуйте снова.")
+		return
+	}
 	// дальше — твое меню (без изменений)
 	for {
 		clearConsole()
-
 		fmt.Printf("│ %-26s   │\n", HelloUser()+" "+NewUser.Name)
 		fmt.Printf("│ Username: @%-16s  │\n", NewUser.Username)
 		fmt.Printf("│ ID: %-22d   │\n", NewUser.ID)
-		fmt.Println("├──────────────────────────────┤")
-		fmt.Println("│ 1 — Показать пароль          │")
-		fmt.Println("│ 2 — Сменить пароль           │")
-		fmt.Println("│ 3 — Сменить username         │")
-		fmt.Println("│ 4 — Чат                      │")
-		fmt.Println("│ 0 — Выход                    │")
-		fmt.Println("└──────────────────────────────┘")
-
+		UserMenu()
 		var choice int
 		fmt.Print("Выберите пункт: ")
 		fmt.Scan(&choice)
 
 		switch choice {
 		case 1:
-			fmt.Println("Ваш пароль:", NewUser.Password)
-		case 2:
 			NewUser.ChangePassword(db)
-		case 3:
+		case 2:
 			NewUser.ChangeUsername(db)
+		case 3:
+			NewUser.ChangeName(db)
 		case 4:
-			// чат
+			var IdEnter string
+			fmt.Println("Введите id пользователя:")
+			fmt.Scan(&IdEnter)
+
 		case 0:
 			fmt.Println("Выход...")
 			return
@@ -87,5 +82,4 @@ func main() {
 		}
 	}
 
-	///
 }
