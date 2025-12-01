@@ -29,13 +29,13 @@ func main() {
 
 	var NewUser User
 	color.Red("═══════════════════════════════════════════════")
-	color.Red("|                                             |")
-	color.Black("|            ", HelloUser(), "                   |")
-	color.Red("|                                             |")
-	color.Red("|1 - войти                                    |")
-	color.Red("|2 - зарегестрироваться                       |")
-	color.Red("|                                             |")
-	color.Red("|                                             |")
+	fmt.Println("|                                             |")
+	fmt.Println("|            ", HelloUser(), "                  |")
+	fmt.Println("|                                             |")
+	fmt.Println("|1 - войти                                    |")
+	fmt.Println("|2 - зарегестрироваться                       |")
+	fmt.Println("|                                             |")
+	fmt.Println("|                                             |")
 	color.Red("═══════════════════════════════════════════════")
 
 	var choose int

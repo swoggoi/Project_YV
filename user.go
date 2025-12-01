@@ -12,47 +12,38 @@ type User struct {
 	Password string
 }
 
-func handleLoginOrRegister(db *sql.DB, NewUser *User) {
+func handleLoginOrRegister(db *sql.DB, u *User) {
+	var username, password string
 	fmt.Println("Введите username:")
-	fmt.Scan(&NewUser.Username)
+	fmt.Scan(&username)
+	fmt.Println("Введите пароль:")
+	fmt.Scan(&password)
 
-	userFromDB, err := getUser(db, NewUser.Username)
-
-	switch err {
-	case sql.ErrNoRows:
-		fmt.Println("Пользователь не найден. Регистрация.")
-		fmt.Println("Введите имя:")
-		fmt.Scan(&NewUser.Name)
-		fmt.Println("Введите пароль:")
-		fmt.Scan(&NewUser.Password)
-
-		NewUser.ID = IdGenerator()
-		if err := saveUser(db, NewUser); err != nil {
-			fmt.Println("Ошибка сохранения:", err)
-			return
+	existingUser, err := getUser(db, username)
+	if err == nil {
+		// пользователь найден → проверяем пароль
+		if CheckPassword(existingUser.Password, password) {
+			*u = *existingUser
+			fmt.Println("Успешный вход!")
+		} else {
+			fmt.Println("Неверный пароль")
 		}
-		fmt.Println("Регистрация успешна! Ваш ID:", NewUser.ID)
-
-	case nil:
-		fmt.Println("Введите пароль:")
-		var inputPassword string
-		fmt.Scan(&inputPassword)
-
-		if !verifyLogin(userFromDB, inputPassword) {
-			fmt.Println("Неверный пароль!")
-			return
+	} else {
+		// пользователь не найден → регистрируем
+		u.ID = IdGenerator()
+		u.Username = username
+		u.Name = username
+		u.Password = password
+		if err := saveUser(db, u); err != nil {
+			fmt.Println("Ошибка регистрации:", err)
+		} else {
+			fmt.Println("Регистрация успешна!")
 		}
-
-		*NewUser = *userFromDB
-		fmt.Println("Вход выполнен!")
-
-	default:
-		fmt.Println("Ошибка БД:", err)
-		return
 	}
 }
 
 func saveUser(db *sql.DB, user *User) error {
+
 	if user.Password != "" && len(user.Password) < 4 || (len(user.Password) >= 2 && user.Password[:2] != "$2") {
 		h, err := HashPassword(user.Password)
 		if err != nil {
@@ -67,11 +58,10 @@ func saveUser(db *sql.DB, user *User) error {
 		user.ID, user.Username, user.Name, user.Password)
 	return err
 }
-
 func verifyLogin(userFromDB *User, inputPassword string) bool {
+	// userFromDB.Password — это ХЭШ
 	return CheckPassword(userFromDB.Password, inputPassword)
 }
-
 func (u *User) ChangePassword(db *sql.DB) bool {
 	var newPassword string
 	fmt.Println("Введите новый пароль:")
