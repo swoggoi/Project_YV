@@ -56,9 +56,9 @@ func main() {
 	for {
 		clearConsole()
 		fmt.Println("┌──────────────────────────────┐")
-		fmt.Printf("│ %-26s │\n", HelloUser()+NewUser.Name)
-		fmt.Printf("│ Username: @%-16s │\n", NewUser.Username)
-		fmt.Printf("│ ID: %-22d │\n", NewUser.ID)
+		fmt.Printf("│ %-26s   │\n", HelloUser()+NewUser.Name)
+		fmt.Printf("│ Username: @%-16s  │\n", NewUser.Username)
+		fmt.Printf("│ ID: %-22d   │\n", NewUser.ID)
 		fmt.Println("├──────────────────────────────┤")
 		fmt.Println("│ 1 — Показать пароль          │")
 		fmt.Println("│ 2 — Сменить пароль           │")
