@@ -8,112 +8,112 @@ import (
 )
 
 func getUser(db *sql.DB, username string) (*User, error) {
-    var u User
-    err := db.QueryRow(`
+	var u User
+	err := db.QueryRow(`
         SELECT id, username, name, password 
         FROM users WHERE username = $1`, username).
-        Scan(&u.ID, &u.Username, &u.Name, &u.Password)
+		Scan(&u.ID, &u.Username, &u.Name, &u.Password)
 
-    if err != nil {
-        return nil, err
-    }
-    return &u, nil
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
 }
 
 func main() {
-	 rand.Seed(time.Now().UnixNano())
-    db := initDB()
-    defer db.Close()
-	
-    var NewUser User
-    MainMenu()
+	rand.Seed(time.Now().UnixNano())
+	db := initDB()
+	defer db.Close()
 
-    var choose int
-    fmt.Scan(&choose)
+	var NewUser User
+	MainMenu()
 
-    switch choose {
-    case 1:
-        user := login(db)
-        if user != nil {
-            NewUser = *user
-        }
-    case 2:
-        user := register(db)
-        if user != nil {
-            NewUser = *user
-        }
-    case 0:
-        fmt.Println("Выход...")
-        return
-    default:
-        fmt.Println("Неверный выбор")
-        return
-    }
+	var choose int
+	fmt.Scan(&choose)
 
-    if NewUser.ID == 0 {
-        fmt.Println("Ошибка входа или регистрации. Попробуйте снова.")
-        return
-    }
+	switch choose {
+	case 1:
+		user := login(db)
+		if user != nil {
+			NewUser = *user
+		}
+	case 2:
+		user := register(db)
+		if user != nil {
+			NewUser = *user
+		}
+	case 0:
+		fmt.Println("Выход...")
+		return
+	default:
+		fmt.Println("Неверный выбор")
+		return
+	}
 
-    // Основное меню
-    for {
-        clearConsole()
-        fmt.Printf("│ %-26s   │\n", HelloUser()+" "+NewUser.Name)
-        fmt.Printf("│ Username: @%-16s  │\n", NewUser.Username)
-        fmt.Printf("│ ID: %-22d   │\n", NewUser.ID)
-        UserMenu()
+	if NewUser.ID == 0 {
+		fmt.Println("Ошибка входа или регистрации. Попробуйте снова.")
+		return
+	}
 
-        var choice int
-        fmt.Print("Выберите пункт: ")
-        fmt.Scan(&choice)
+	// Основное меню
+	for {
+		clearConsole()
+		fmt.Printf("│ %-26s   │\n", HelloUser()+" "+NewUser.Name)
+		fmt.Printf("│ Username: @%-16s  │\n", NewUser.Username)
+		fmt.Printf("│ ID: %-22d   │\n", NewUser.ID)
+		UserMenu()
 
-        switch choice {
+		var choice int
+		fmt.Print("Выберите пункт: ")
+		fmt.Scan(&choice)
 
-        case 1:
-            NewUser.ChangePassword(db)
+		switch choice {
 
-        case 2:
-            NewUser.ChangeUsername(db)
+		case 1:
+			NewUser.ChangePassword(db)
 
-        case 3:
-            NewUser.ChangeName(db)
+		case 2:
+			NewUser.ChangeUsername(db)
 
-        case 4:
-            // ✅ Реализованный чат по ID
-            fmt.Print("Введите ID пользователя: ")
-            var targetID int
-            fmt.Scan(&targetID)
+		case 3:
+			NewUser.ChangeName(db)
 
-            if targetID == NewUser.ID {
-                fmt.Println("Нельзя писать самому себе.")
-                break
-            }
+		case 4:
 
-            partner, err := findUserByID(db, targetID)
-            if err != nil {
-                fmt.Println("Ошибка поиска:", err)
-                break
-            }
-            if partner == nil {
-                fmt.Println("Пользователь не найден.")
-                break
-            }
+			fmt.Print("Введите ID пользователя: ")
+			var targetID int
+			fmt.Scan(&targetID)
 
-            clearConsole()
-            fmt.Printf("Чат с %s (@%s)\n", partner.Name, partner.Username)
-            fmt.Println("История сообщений:\n")
+			if targetID == NewUser.ID {
+				fmt.Println("Нельзя писать самому себе.")
+				break
+			}
 
-            showChatHistory(db, NewUser.ID, partner.ID)
+			partner, err := findUserByID(db, targetID)
+			if err != nil {
+				fmt.Println("Ошибка поиска:", err)
+				break
+			}
+			if partner == nil {
+				fmt.Println("Пользователь не найден.")
+				break
+			}
 
-            fmt.Println("\nВведите сообщение (или 'exit' для выхода):")
-            startChat(db, &NewUser, partner.ID)
+			clearConsole()
+			fmt.Printf("Чат с %s (@%s)\n", partner.Name, partner.Username)
+			fmt.Println("История сообщений:\n")
 
-        case 0:
-            fmt.Println("Выход...")
-            return
+			showChatHistory(db, NewUser.ID, partner.ID)
 
-        default:
-            fmt.Println("Неверный выбор")
-        }
-    }
+			fmt.Println("\nВведите сообщение (или 'exit' для выхода):")
+			startChat(db, &NewUser, partner.ID)
+
+		case 0:
+			fmt.Println("Выход...")
+			return
+
+		default:
+			fmt.Println("Неверный выбор")
+		}
+	}
 }
