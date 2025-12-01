@@ -45,6 +45,8 @@ func main() {
 	switch choose {
 	case 1:
 		handleLoginOrRegister(db, &NewUser)
+	case 2:
+		handleLoginOrRegister(db, &NewUser)
 	case 0:
 		fmt.Println("Выход...")
 		return
