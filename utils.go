@@ -6,7 +6,23 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
+
+const bcryptCost = bcrypt.DefaultCost
+
+func HashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+func CheckPassword(hash string, password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+}
 
 func IdGenerator() int {
 	rand.Seed(time.Now().UnixNano())
@@ -28,12 +44,12 @@ func HelloUser() string {
 	hour := time.Now().Hour()
 	switch {
 	case hour >= 9 && hour <= 11:
-		return "Доброе утро! "
+		return "Доброе утро!"
 	case hour >= 12 && hour <= 18:
-		return "Добрый день! "
+		return "Добрый день!"
 	case hour >= 19 && hour <= 23:
-		return "Добрый вечер! "
+		return "Добрый вечер!"
 	default:
-		return "Доброй ночи! "
+		return "Доброй ночи!"
 	}
 }
