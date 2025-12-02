@@ -91,16 +91,16 @@ func register(db *sql.DB) *User {
 		return nil
 	}
 
-	var user User
-	user.ID = GenerateUniqueID(db)
+var user User
+user.ID = GenerateUniqueID(db)
 
-	err = db.QueryRow(`
-        INSERT INTO users (id, username, password, name)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, username, password, name
-    `, user.ID, username, string(hashed), username).Scan(
-		&user.ID, &user.Username, &user.Password, &user.Name,
-	)
+err = db.QueryRow(`
+    INSERT INTO users (id, username, password, name)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, username, password, name
+`, user.ID, username, string(hashed), username).Scan(
+    &user.ID, &user.Username, &user.Password, &user.Name,
+)
 
 	if err != nil {
 		fmt.Println("Ошибка регистрации:", err)
