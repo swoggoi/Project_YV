@@ -111,6 +111,7 @@ err = db.QueryRow(`
 	return &user
 }
 
+
 func MainMenu() {
 	fmt.Println("╔════════════════════════════════════════════════════════════╗")
 	fmt.Println("║                                                            ║")
@@ -134,7 +135,6 @@ func UserMenu() {
 	fmt.Println("└──────────────────────────────┘")
 }
 
-// -------------------- USER LOOKUP --------------------
 
 func findUserByID(db *sql.DB, id int) (*User, error) {
 	var u User
