@@ -171,30 +171,41 @@ func (u *User) ChangeName(db *sql.DB) bool {
 }
 
 func login(db *sql.DB) *User {
-	fmt.Print("Введите username: ")
-	username := readLine()
-	fmt.Print("Введите пароль: ")
-	password := readLine()
+	for {
+		fmt.Print("Введите username: ")
+		username := readLine()
+		if username == "" {
+			fmt.Println("Вы ввели пустоту!!!")
+			continue
+		}
 
-	user, err := findUserByUsername(db, username)
-	if err != nil {
-		fmt.Println("Ошибка при поиске пользователя:", err)
-		return nil
+		fmt.Print("Введите пароль: ")
+		password := readLine()
+		if password == "" {
+			fmt.Println("Вы ввели пустоту!!!")
+			continue
+		}
+
+		user, err := findUserByUsername(db, username)
+		if err != nil {
+			fmt.Println("Ошибка при поиске пользователя:", err)
+			continue
+		}
+
+		if user == nil {
+			fmt.Println("Пользователь не найден.")
+			continue
+		}
+
+		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+		if err != nil {
+			fmt.Println("Неверный пароль.")
+			continue
+		}
+
+		fmt.Println("Успешный вход!")
+		return user
 	}
-
-	if user == nil {
-		fmt.Println("Пользователь не найден.")
-		return nil
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		fmt.Println("Неверный пароль.")
-		return nil
-	}
-
-	fmt.Println("Успешный вход!")
-	return user
 }
 
 func findUserByUsername(db *sql.DB, username string) (*User, error) {
