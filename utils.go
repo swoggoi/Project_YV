@@ -126,14 +126,15 @@ func MainMenu() {
 }
 
 func UserMenu() {
-	fmt.Println("├──────────────────────────────┤")
-	fmt.Println("│ 1 — Сменить пароль           │")
-	fmt.Println("│ 2 — Сменить username         │")
-	fmt.Println("│ 3 — Сменить имя              │")
-	fmt.Println("│ 4 — Войти в чат по id        │")
-	fmt.Println("│ 0 — Выход                    │")
-	fmt.Println("└──────────────────────────────┘")
+    fmt.Println("┌──────────────────────────────┐")
+    fmt.Println("│ 1 — Сменить пароль           │")
+    fmt.Println("│ 2 — Сменить username         │")
+    fmt.Println("│ 3 — Сменить имя              │")
+    fmt.Println("│ 4 — Войти в чат по id        │")
+    fmt.Println("│ 0 — Выход                    │")
+    fmt.Println("└──────────────────────────────┘")
 }
+
 
 
 func findUserByID(db *sql.DB, id int) (*User, error) {
