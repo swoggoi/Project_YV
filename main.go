@@ -101,7 +101,7 @@ func main() {
 
 			clearConsole()
 			fmt.Printf("Чат с %s (@%s)\n", partner.Name, partner.Username)
-			fmt.Println("История сообщений:\n")
+			fmt.Println("История сообщений:")
 
 			showChatHistory(db, NewUser.ID, partner.ID)
 
