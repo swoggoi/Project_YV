@@ -91,16 +91,16 @@ func register(db *sql.DB) *User {
 		return nil
 	}
 
-var user User
-user.ID = GenerateUniqueID(db)
+	var user User
+	user.ID = GenerateUniqueID(db)
 
-err = db.QueryRow(`
+	err = db.QueryRow(`
     INSERT INTO users (id, username, password, name)
     VALUES ($1, $2, $3, $4)
     RETURNING id, username, password, name
 `, user.ID, username, string(hashed), username).Scan(
-    &user.ID, &user.Username, &user.Password, &user.Name,
-)
+		&user.ID, &user.Username, &user.Password, &user.Name,
+	)
 
 	if err != nil {
 		fmt.Println("Ошибка регистрации:", err)
@@ -110,7 +110,6 @@ err = db.QueryRow(`
 	fmt.Println("Регистрация успешна!")
 	return &user
 }
-
 
 func MainMenu() {
 	fmt.Println("╔════════════════════════════════════════════════════════════╗")
@@ -126,16 +125,14 @@ func MainMenu() {
 }
 
 func UserMenu() {
-    fmt.Println("┌──────────────────────────────┐")
-    fmt.Println("│ 1 — Сменить пароль           │")
-    fmt.Println("│ 2 — Сменить username         │")
-    fmt.Println("│ 3 — Сменить имя              │")
-    fmt.Println("│ 4 — Войти в чат по id        │")
-    fmt.Println("│ 0 — Выход                    │")
-    fmt.Println("└──────────────────────────────┘")
+	fmt.Println("┌──────────────────────────────┐")
+	fmt.Println("│ 1 — Сменить пароль           │")
+	fmt.Println("│ 2 — Сменить username         │")
+	fmt.Println("│ 3 — Сменить имя              │")
+	fmt.Println("│ 4 — Войти в чат по id        │")
+	fmt.Println("│ 0 — Выход                    │")
+	fmt.Println("└──────────────────────────────┘")
 }
-
-
 
 func findUserByID(db *sql.DB, id int) (*User, error) {
 	var u User
