@@ -8,4 +8,3 @@ require (
 	golang.org/x/crypto v0.45.0
 )
 
-require fyne.io/fyne/v2 v2.7.1 // indirect

@@ -1,24 +1,10 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"math/rand"
 	"time"
 )
-
-func getUser(db *sql.DB, username string) (*User, error) {
-	var u User
-	err := db.QueryRow(`
-        SELECT id, username, name, password 
-        FROM users WHERE username = $1`, username).
-		Scan(&u.ID, &u.Username, &u.Name, &u.Password)
-
-	if err != nil {
-		return nil, err
-	}
-	return &u, nil
-}
 
 func main() {
 	rand.Seed(time.Now().UnixNano())

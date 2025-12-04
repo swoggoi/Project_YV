@@ -11,7 +11,7 @@ import (
 )
 
 func initDB() *sql.DB {
-	// Загружаем переменные из .env
+	//env
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Ошибка загрузки .env файла:", err)
