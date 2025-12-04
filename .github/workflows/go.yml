@@ -1,0 +1,31 @@
+
+name: Go Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout репозиторий
+      uses: actions/checkout@v3
+
+    - name: 🛠️ Установка Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+
+    - name: 📦 Установка зависимостей
+      run: go mod tidy
+
+    - name: ✅ Сборка проекта
+      run: go build -v ./...
+
+    - name: 🧪 Тестирование
+      run: go test -v ./...
