@@ -1,6 +1,6 @@
 # 💬 Project_YV — Консольный мессенджер на Go
 ![Go Version](https://img.shields.io/badge/Go-1.24.4+-blue)
-![License](https://img.shields.io/github/license/swoggoi/Project_YV)
+[![License](https://img.shields.io/github/license/swoggoi/Project_YV?style=flat)](https://github.com/swoggoi/Project_YV/blob/main/LICENSE)
 ![Stars](https://img.shields.io/github/stars/swoggoi/Project_YV?style=social)
 
 
