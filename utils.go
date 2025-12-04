@@ -70,16 +70,26 @@ func HelloUser() string {
 
 func register(db *sql.DB) *User {
 	for {
-		fmt.Print("Введите новый username: ")
-		username := readLine()
-		if username == "" {
-			fmt.Println("Пустоту нельзя вводить!")
+		var username, password string
+
+		for {
+			fmt.Print("Введите новый username: ")
+			username = readLine()
+			if username == "" {
+				fmt.Println("Пустоту нельзя вводить!")
+				continue
+			}
+			break
 		}
 
-		fmt.Print("Введите пароль: ")
-		password := readLine()
-		if password == "" {
-			fmt.Println("Пустоту нельзя вводить!")
+		for {
+			fmt.Print("Введите пароль: ")
+			password = readLine()
+			if password == "" {
+				fmt.Println("Пустоту нельзя вводить!")
+				continue
+			}
+			break
 		}
 
 		existing, err := findUserByUsername(db, username)
@@ -89,7 +99,7 @@ func register(db *sql.DB) *User {
 		}
 		if existing != nil {
 			fmt.Println("Пользователь уже существует.")
-			return nil
+			continue
 		}
 
 		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -102,10 +112,10 @@ func register(db *sql.DB) *User {
 		user.ID = GenerateUniqueID(db)
 
 		err = db.QueryRow(`
-    INSERT INTO users (id, username, password, name)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id, username, password, name
-`, user.ID, username, string(hashed), username).Scan(
+            INSERT INTO users (id, username, password, name)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, username, password, name
+        `, user.ID, username, string(hashed), username).Scan(
 			&user.ID, &user.Username, &user.Password, &user.Name,
 		)
 
@@ -114,7 +124,7 @@ func register(db *sql.DB) *User {
 			return nil
 		}
 
-		fmt.Println("Регистрация успешна!")
+		fmt.Println("✅ Регистрация успешна!")
 		return &user
 	}
 }
