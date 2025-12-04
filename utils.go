@@ -133,7 +133,7 @@ func MainMenu() {
 	clearConsole()
 	fmt.Println("╔════════════════════════════════════════════════════════════════════╗")
 	fmt.Println("║                                                                    ║")
-	fmt.Printf("║  👋 %s%-54s║\n", HelloUser(), "") // приветствие
+	fmt.Printf("║  👋 %s%-51s║\n", HelloUser(), "")
 	fmt.Println("║                                                                    ║")
 	fmt.Println("║  1 — 🔐  Войти в аккаунт                                           ║")
 	fmt.Println("║  2 — 📝  Зарегистрироваться                                        ║")
@@ -146,11 +146,11 @@ func MainMenu() {
 func UserMenu() {
 	clearConsole()
 	fmt.Println("╔════════════════════════════════════════════╗")
-	fmt.Println("║              ⚙️  Меню пользователя              ║")
+	fmt.Println("║              ⚙️  Меню пользователя          ║")
 	fmt.Println("╠════════════════════════════════════════════╣")
-	fmt.Println("║ 1 — 🔑  Сменить пароль                      ║")
-	fmt.Println("║ 2 — 🆔  Сменить username                    ║")
-	fmt.Println("║ 3 — 🧾  Сменить имя                         ║")
+	fmt.Println("║ 1 — 🔑  Сменить пароль                     ║")
+	fmt.Println("║ 2 — 🆔  Сменить username                   ║")
+	fmt.Println("║ 3 — 🧾  Сменить имя                        ║")
 	fmt.Println("║ 4 — 💬  Войти в чат по ID                  ║")
 	fmt.Println("║ 0 — 🔙  Назад                              ║")
 	fmt.Println("╚════════════════════════════════════════════╝")
@@ -171,6 +171,12 @@ func findUserByID(db *sql.DB, id int) (*User, error) {
 }
 
 func showChatHistory(db *sql.DB, userID, partnerID int) {
+	var partnerName string
+	err := db.QueryRow("SELECT name FROM users WHERE id = $1", partnerID).Scan(&partnerName)
+	if err != nil {
+		fmt.Println("Ошибка получения имени собеседника:", err)
+		return
+	}
 	rows, err := db.Query(`
         SELECT from_id, text, created_at
         FROM messages
@@ -190,7 +196,7 @@ func showChatHistory(db *sql.DB, userID, partnerID int) {
 		var createdAt time.Time
 		rows.Scan(&fromID, &text, &createdAt)
 
-		sender := "Собеседник"
+		sender := partnerName
 		if fromID == userID {
 			sender = "Вы"
 		}
@@ -211,27 +217,25 @@ func startChat(db *sql.DB, currentUser *User, partnerID int) {
 		fmt.Printf("Чат с %s (@%s)\n\n", partner.Name, partner.Username)
 
 		showChatHistory(db, currentUser.ID, partnerID)
-		for {
-			fmt.Println("\nВведите сообщение (или 'exit' для выхода):")
-			fmt.Print("Вы: ")
+		fmt.Println("\nВведите сообщение (или 'exit' для выхода):")
+		fmt.Print("Вы: ")
 
-			text := readLine()
-			if text == "exit" || text == "EXIT" || text == "Exit" {
-				break
-			} else if text == "" {
-				continue
-			}
+		text := readLine()
+		if text == "exit" {
+			break
+		} else if text == "" {
+			continue
+		}
 
-			_, err := db.Exec(`
+		_, err := db.Exec(`
             INSERT INTO messages (from_id, to_id, text)
             VALUES ($1, $2, $3)
         `, currentUser.ID, partnerID, text)
 
-			if err != nil {
-				fmt.Println("Ошибка отправки:", err)
-				time.Sleep(1 * time.Second)
-				continue
-			}
+		if err != nil {
+			fmt.Println("Ошибка отправки:", err)
+			time.Sleep(1 * time.Second)
+			continue
 		}
 	}
 }
