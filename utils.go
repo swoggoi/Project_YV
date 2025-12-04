@@ -69,69 +69,82 @@ func HelloUser() string {
 }
 
 func register(db *sql.DB) *User {
-	fmt.Print("Введите новый username: ")
-	username := readLine()
+	for {
+		fmt.Print("Введите новый username: ")
+		username := readLine()
+		if username == "" {
+			fmt.Println("Пустоту нельзя вводить!")
+		}
 
-	fmt.Print("Введите пароль: ")
-	password := readLine()
+		fmt.Print("Введите пароль: ")
+		password := readLine()
+		if password == "" {
+			fmt.Println("Пустоту нельзя вводить!")
+		}
 
-	existing, err := findUserByUsername(db, username)
-	if err != nil {
-		fmt.Println("Ошибка при проверке:", err)
-		return nil
-	}
-	if existing != nil {
-		fmt.Println("Пользователь уже существует.")
-		return nil
-	}
+		existing, err := findUserByUsername(db, username)
+		if err != nil {
+			fmt.Println("Ошибка при проверке:", err)
+			return nil
+		}
+		if existing != nil {
+			fmt.Println("Пользователь уже существует.")
+			return nil
+		}
 
-	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		fmt.Println("Ошибка хэширования:", err)
-		return nil
-	}
+		hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			fmt.Println("Ошибка хэширования:", err)
+			return nil
+		}
 
-	var user User
-	user.ID = GenerateUniqueID(db)
+		var user User
+		user.ID = GenerateUniqueID(db)
 
-	err = db.QueryRow(`
+		err = db.QueryRow(`
     INSERT INTO users (id, username, password, name)
     VALUES ($1, $2, $3, $4)
     RETURNING id, username, password, name
 `, user.ID, username, string(hashed), username).Scan(
-		&user.ID, &user.Username, &user.Password, &user.Name,
-	)
+			&user.ID, &user.Username, &user.Password, &user.Name,
+		)
 
-	if err != nil {
-		fmt.Println("Ошибка регистрации:", err)
-		return nil
+		if err != nil {
+			fmt.Println("Ошибка регистрации:", err)
+			return nil
+		}
+
+		fmt.Println("Регистрация успешна!")
+		return &user
 	}
-
-	fmt.Println("Регистрация успешна!")
-	return &user
 }
 
 func MainMenu() {
-	fmt.Println("╔════════════════════════════════════════════════════════════╗")
-	fmt.Println("║                                                            ║")
-	fmt.Println("║", HelloUser(), "                                              ║")
-	fmt.Println("║                                                            ║")
-	fmt.Println("║  1 — 🔐 Войти                                              ║")
-	fmt.Println("║  2 — 📝 Зарегистрироваться                                 ║")
-	fmt.Println("║  0 — 🚪 Выход                                              ║")
-	fmt.Println("║                                                            ║")
-	fmt.Println("╚════════════════════════════════════════════════════════════╝")
-	fmt.Println("Введите пункт:")
+	clearConsole()
+	fmt.Println("╔════════════════════════════════════════════════════════════════════╗")
+	fmt.Println("║                                                                    ║")
+	fmt.Printf("║  👋 %s%-54s║\n", HelloUser(), "") // приветствие
+	fmt.Println("║                                                                    ║")
+	fmt.Println("║  1 — 🔐  Войти в аккаунт                                           ║")
+	fmt.Println("║  2 — 📝  Зарегистрироваться                                        ║")
+	fmt.Println("║  0 — 🚪  Выход из программы                                        ║")
+	fmt.Println("║                                                                    ║")
+	fmt.Println("╚════════════════════════════════════════════════════════════════════╝")
+	fmt.Print("👉 Введите номер пункта: ")
 }
 
 func UserMenu() {
-	fmt.Println("┌──────────────────────────────┐")
-	fmt.Println("│ 1 — Сменить пароль           │")
-	fmt.Println("│ 2 — Сменить username         │")
-	fmt.Println("│ 3 — Сменить имя              │")
-	fmt.Println("│ 4 — Войти в чат по id        │")
-	fmt.Println("│ 0 — Выход                    │")
-	fmt.Println("└──────────────────────────────┘")
+	clearConsole()
+	fmt.Println("╔════════════════════════════════════════════╗")
+	fmt.Println("║              ⚙️  Меню пользователя              ║")
+	fmt.Println("╠════════════════════════════════════════════╣")
+	fmt.Println("║ 1 — 🔑  Сменить пароль                      ║")
+	fmt.Println("║ 2 — 🆔  Сменить username                    ║")
+	fmt.Println("║ 3 — 🧾  Сменить имя                         ║")
+	fmt.Println("║ 4 — 💬  Войти в чат по ID                  ║")
+	fmt.Println("║ 0 — 🔙  Назад                              ║")
+	fmt.Println("╚════════════════════════════════════════════╝")
+	fmt.Print("👉 Ваш выбор: ")
 }
 
 func findUserByID(db *sql.DB, id int) (*User, error) {
@@ -188,24 +201,27 @@ func startChat(db *sql.DB, currentUser *User, partnerID int) {
 		fmt.Printf("Чат с %s (@%s)\n\n", partner.Name, partner.Username)
 
 		showChatHistory(db, currentUser.ID, partnerID)
+		for {
+			fmt.Println("\nВведите сообщение (или 'exit' для выхода):")
+			fmt.Print("Вы: ")
 
-		fmt.Println("\nВведите сообщение (или 'exit' для выхода):")
-		fmt.Print("Вы: ")
+			text := readLine()
+			if text == "exit" || text == "EXIT" || text == "Exit" {
+				break
+			} else if text == "" {
+				continue
+			}
 
-		text := readLine()
-		if text == "exit" {
-			break
-		}
-
-		_, err := db.Exec(`
+			_, err := db.Exec(`
             INSERT INTO messages (from_id, to_id, text)
             VALUES ($1, $2, $3)
         `, currentUser.ID, partnerID, text)
 
-		if err != nil {
-			fmt.Println("Ошибка отправки:", err)
-			time.Sleep(1 * time.Second)
-			continue
+			if err != nil {
+				fmt.Println("Ошибка отправки:", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
 		}
 	}
 }

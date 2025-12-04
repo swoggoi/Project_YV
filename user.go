@@ -58,7 +58,6 @@ func (u *User) ChangeUsername(db *sql.DB) bool {
 	return true
 }
 
-
 func (u *User) ChangePassword(db *sql.DB) bool {
 	var newPassword string
 	fmt.Println("Введите новый пароль:")
