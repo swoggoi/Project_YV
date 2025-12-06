@@ -93,7 +93,6 @@ func (u *User) ChangeName(db *sql.DB) bool {
 		return false
 	}
 
-	//такого username ещё нет
 	var exists int
 	err := db.QueryRow(`SELECT COUNT(*) FROM users WHERE name = $1`, newName).Scan(&exists)
 	if err != nil {
@@ -160,7 +159,7 @@ func findUserByUsername(db *sql.DB, username string) (*User, error) {
 	err := db.QueryRow(`SELECT id, username, password, name FROM users WHERE username = $1`, username).
 		Scan(&u.ID, &u.Username, &u.Password, &u.Name)
 	if err == sql.ErrNoRows {
-		return nil, nil // пользователь не найден
+		return nil, nil
 	}
 	if err != nil {
 		return nil, err
